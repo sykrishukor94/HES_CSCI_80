@@ -1,0 +1,4 @@
+[["X", "O", "O"],[None, "O", None],["X", "X", "O"]]
+[["X", "O", "O"],[None, None, None],[None, None, None]]
+[["X", "X", "X"],[None, None, None],[None, None, None]]
+[["X", "O", "O"],["X", "O", "X"],["X", "X", "O"]]
