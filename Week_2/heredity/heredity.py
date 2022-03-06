@@ -1,7 +1,9 @@
 import csv
 import itertools
 import sys
+import math
 
+# Dictionary {}
 PROBS = {
 
     # Unconditional probabilities for having gene
@@ -37,12 +39,14 @@ PROBS = {
 }
 
 
-def main():
+#  Test printing PROBS
 
-    # Check for proper usage
-    if len(sys.argv) != 2:
-        sys.exit("Usage: python heredity.py data.csv")
-    people = load_data(sys.argv[1])
+def main():
+    # # Check for proper usage
+    # if len(sys.argv) != 2:
+    #     sys.exit("Usage: python heredity.py data.csv")
+    # people = load_data(sys.argv[1])
+    people = load_data("data/family0.csv")
 
     # Keep track of gene and trait probabilities for each person
     probabilities = {
@@ -60,8 +64,11 @@ def main():
         for person in people
     }
 
+    # print(probabilities)
+
     # Loop over all sets of people who might have the trait
     names = set(people)
+
     for have_trait in powerset(names):
 
         # Check if current set of people violates known information
@@ -70,19 +77,21 @@ def main():
              people[person]["trait"] != (person in have_trait))
             for person in names
         )
+
+        # print(have_trait, fails_evidence)
         if fails_evidence:
             continue
 
         # Loop over all sets of people who might have the gene
         for one_gene in powerset(names):
             for two_genes in powerset(names - one_gene):
-
                 # Update probabilities with new joint probability
                 p = joint_probability(people, one_gene, two_genes, have_trait)
+                print(one_gene,",", two_genes,",", have_trait,",", p)
                 update(probabilities, one_gene, two_genes, have_trait, p)
 
     # Ensure probabilities sum to 1
-    normalize(probabilities)
+    # normalize(probabilities)
 
     # Print results
     for person in people:
@@ -100,7 +109,7 @@ def load_data(filename):
     File assumed to be a CSV containing fields name, mother, father, trait.
     mother, father must both be blank, or both be valid names in the CSV.
     trait should be 0 or 1 if trait is known, blank otherwise.
-    """
+        """
     data = dict()
     with open(filename) as f:
         reader = csv.DictReader(f)
@@ -139,7 +148,73 @@ def joint_probability(people, one_gene, two_genes, have_trait):
         * everyone in set `have_trait` has the trait, and
         * everyone not in set` have_trait` does not have the trait.
     """
-    raise NotImplementedError
+
+    def check_trait(person, genes):
+
+        if person in have_trait:
+            return PROBS["trait"][genes][True]
+        else:
+            return PROBS["trait"][genes][False]
+
+    def check_parents(person, genes):
+
+        # initialize variables
+        mom = people[person]["mother"]
+        dad = people[person]["father"]
+
+        # return p_parent_gene if no parents (UNCONDITIONAL)
+        if mom is None and dad is None:
+            return PROBS["gene"][genes]
+
+        # joint probabilities for mom, dad (in that order)
+        p_parents = []
+
+        # Find mutation probability for <0,1,2> genes
+        for parent in [mom, dad]:
+            p_parent_gene = 0
+
+            if parent in two_genes:  # if parent has 2 genes, 99% mutation
+                p_parents.append(1 - PROBS["mutation"])
+            elif parent in one_gene:  # if parent has 1 gene, 50% mutation
+                p_parents.append(0.5)
+            else:  # if parent has 0 gene, 1% mutation
+                p_parents.append(PROBS["mutation"])
+
+        # probability inheriting 2 genes
+        if genes == 2:
+            return (p_parents[0] * p_parents[1])
+
+        # probability inheriting 1 gene
+        elif genes == 1:
+            return ((1 - p_parents[0]) * (p_parents[1])) + \
+                   ((p_parents[0]) * (1 - p_parents[1]))
+
+        # probability inheriting 0 gene
+        else:
+            return ((1 - p_parents[0]) * (1 - p_parents[1]))
+
+    # Initialize variable
+    p_joint = []
+
+    for person in people:
+
+        p_gene = 0
+        p_trait = 0
+
+        if person in two_genes:
+            p_gene = check_parents(person, 2)
+            p_trait = check_trait(person, 2)
+        elif person in one_gene:
+            p_gene = check_parents(person, 1)
+            p_trait = check_trait(person, 1)
+        else:
+            p_gene = check_parents(person, 0)
+            p_trait = check_trait(person, 0)
+
+        p_joint.append(p_gene * p_trait)
+
+    return math.prod(p_joint)
+    # print(list(people.keys()), one_gene, two_genes, have_trait)
 
 
 def update(probabilities, one_gene, two_genes, have_trait, p):
@@ -149,7 +224,25 @@ def update(probabilities, one_gene, two_genes, have_trait, p):
     Which value for each distribution is updated depends on whether
     the person is in `have_gene` and `have_trait`, respectively.
     """
-    raise NotImplementedError
+    for person in probabilities:
+
+        # initialize variables
+        genes = 0
+        trait = False
+
+        # Determine if person has <0, 1, 2> genes
+        if person in one_gene:
+            genes = 1
+        elif person in two_genes:
+            genes = 2
+
+        # Determine if person has trait or not
+        if person in have_trait:
+            trait = True
+
+        # update joint probabilities
+        probabilities[person]["gene"][genes] += p
+        probabilities[person]["trait"][trait] += p
 
 
 def normalize(probabilities):
@@ -157,7 +250,28 @@ def normalize(probabilities):
     Update `probabilities` such that each probability distribution
     is normalized (i.e., sums to 1, with relative proportions the same).
     """
-    raise NotImplementedError
+    for person in probabilities:
+        # Normalize gene
+        gene_2 = probabilities[person]["gene"][2]
+        gene_1 = probabilities[person]["gene"][1]
+        gene_0 = probabilities[person]["gene"][0]
+
+        gene_normalizer = 1 / (gene_0 + gene_1 + gene_2)
+
+        # Update genes
+        probabilities[person]["gene"][2] = gene_2 * gene_normalizer
+        probabilities[person]["gene"][1] = gene_1 * gene_normalizer
+        probabilities[person]["gene"][0] = gene_0 * gene_normalizer
+
+        # Normalize trait
+        true_trait = probabilities[person]["trait"][True]
+        false_trait = probabilities[person]["trait"][False]
+
+        trait_normalizer = 1 / (true_trait + false_trait)
+
+        # Update traits
+        probabilities[person]["trait"][True] = true_trait * trait_normalizer
+        probabilities[person]["trait"][False] = false_trait * trait_normalizer
 
 
 if __name__ == "__main__":
