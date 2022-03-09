@@ -1,0 +1,11 @@
+name,mother,father,trait
+Arthur,,,0
+Hermione,,,0
+Molly,,,
+Ron,Molly,Arthur,0
+Rose,Hermione,Ron,1
+Harry,Lily,James,
+James,,,1
+Lily,,,0
+Voldemort,Lily,James,1
+Harriet,Lily,James,

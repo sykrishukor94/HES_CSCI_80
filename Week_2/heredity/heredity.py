@@ -42,11 +42,11 @@ PROBS = {
 #  Test printing PROBS
 
 def main():
-    # # Check for proper usage
-    # if len(sys.argv) != 2:
-    #     sys.exit("Usage: python heredity.py data.csv")
-    # people = load_data(sys.argv[1])
-    people = load_data("data/family0.csv")
+    # Check for proper usage
+    if len(sys.argv) != 2:
+        sys.exit("Usage: python heredity.py data.csv")
+    people = load_data(sys.argv[1])
+    # people = load_data("data/family0.csv")
 
     # Keep track of gene and trait probabilities for each person
     probabilities = {
@@ -87,11 +87,11 @@ def main():
             for two_genes in powerset(names - one_gene):
                 # Update probabilities with new joint probability
                 p = joint_probability(people, one_gene, two_genes, have_trait)
-                print(one_gene,",", two_genes,",", have_trait,",", p)
+                # print(one_gene,",", two_genes,",", have_trait,",", p)
                 update(probabilities, one_gene, two_genes, have_trait, p)
 
     # Ensure probabilities sum to 1
-    # normalize(probabilities)
+    normalize(probabilities)
 
     # Print results
     for person in people:
@@ -149,13 +149,6 @@ def joint_probability(people, one_gene, two_genes, have_trait):
         * everyone not in set` have_trait` does not have the trait.
     """
 
-    def check_trait(person, genes):
-
-        if person in have_trait:
-            return PROBS["trait"][genes][True]
-        else:
-            return PROBS["trait"][genes][False]
-
     def check_parents(person, genes):
 
         # initialize variables
@@ -193,9 +186,17 @@ def joint_probability(people, one_gene, two_genes, have_trait):
         else:
             return ((1 - p_parents[0]) * (1 - p_parents[1]))
 
+    def check_trait(person, genes):
+
+        if person in have_trait:
+            return PROBS["trait"][genes][True]
+        else:
+            return PROBS["trait"][genes][False]
+
     # Initialize variable
     p_joint = []
 
+    # Loop through list [people]
     for person in people:
 
         p_gene = 0
@@ -251,27 +252,27 @@ def normalize(probabilities):
     is normalized (i.e., sums to 1, with relative proportions the same).
     """
     for person in probabilities:
-        # Normalize gene
+        # Get alpha value for gene
         gene_2 = probabilities[person]["gene"][2]
         gene_1 = probabilities[person]["gene"][1]
         gene_0 = probabilities[person]["gene"][0]
 
-        gene_normalizer = 1 / (gene_0 + gene_1 + gene_2)
+        gene_alpha = 1 / (gene_2 + gene_1 + gene_0)
 
-        # Update genes
-        probabilities[person]["gene"][2] = gene_2 * gene_normalizer
-        probabilities[person]["gene"][1] = gene_1 * gene_normalizer
-        probabilities[person]["gene"][0] = gene_0 * gene_normalizer
+        # Update genes with alpha
+        probabilities[person]["gene"][2] = gene_2 * gene_alpha
+        probabilities[person]["gene"][1] = gene_1 * gene_alpha
+        probabilities[person]["gene"][0] = gene_0 * gene_alpha
 
-        # Normalize trait
-        true_trait = probabilities[person]["trait"][True]
-        false_trait = probabilities[person]["trait"][False]
+        # Get alpha value for trait
+        trait_true = probabilities[person]["trait"][True]
+        trait_false = probabilities[person]["trait"][False]
 
-        trait_normalizer = 1 / (true_trait + false_trait)
+        trait_alpha = 1 / (trait_true + trait_false)
 
-        # Update traits
-        probabilities[person]["trait"][True] = true_trait * trait_normalizer
-        probabilities[person]["trait"][False] = false_trait * trait_normalizer
+        # Update traits with alpha
+        probabilities[person]["trait"][True] = trait_true * trait_alpha
+        probabilities[person]["trait"][False] = trait_false * trait_alpha
 
 
 if __name__ == "__main__":
