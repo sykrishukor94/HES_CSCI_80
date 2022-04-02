@@ -124,7 +124,7 @@ class CrosswordCreator():
 
         """
 
-        # return False if no overlaps
+        # return False unless there are overlaps
         if self.crossword.overlaps[x, y]:
 
             # get x, y overlaps, copy of x's domain values, and letters at y's overlaps
@@ -250,7 +250,7 @@ class CrosswordCreator():
 
         # helper function to score least constraining values of overlapping neighbors
         def get_lcv(val):
-            # TODO: count multiple degrees of separation
+            # TODO: queue vars in entire crossword (e.g count multiple degrees of separation)
             # initialize count
             count = 0
 

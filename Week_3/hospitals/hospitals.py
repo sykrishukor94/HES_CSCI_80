@@ -1,3 +1,4 @@
+import math
 import random
 
 
@@ -70,6 +71,8 @@ class Space():
                     elif best_neighbor_cost == cost:
                         best_neighbors.append(neighbor)
 
+                    # implement simulated annealing (look at Connor's section)
+
             # None of the neighbors are better than the current state
             if best_neighbor_cost >= self.get_cost(self.hospitals):
                 return self.hospitals
@@ -83,6 +86,15 @@ class Space():
             # Generate image
             if image_prefix:
                 self.output_image(f"{image_prefix}{str(count).zfill(3)}.png")
+
+
+    def pick_random(self, temperature, delta):
+
+        random_prob = math.e ** (delta/temperature)
+        print(f"probability of moving to random state is {random_prob}")
+
+        return random.choices([True, False], weights=[random_prob, 1-random_prob])
+
 
     def random_restart(self, maximum, image_prefix=None, log=False):
         """Repeats hill-climbing multiple times."""

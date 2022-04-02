@@ -41,6 +41,8 @@ class Crossword():
 
         # Determine structure of crossword
         with open(structure_file) as f:
+
+            # sets up board line by line
             contents = f.read().splitlines()
             self.height = len(contents)
             self.width = max(len(line) for line in contents)
@@ -50,11 +52,11 @@ class Crossword():
                 row = []
                 for j in range(self.width):
                     if j >= len(contents[i]):
-                        row.append(False)
+                        row.append(False) # blank cell to NOT fill
                     elif contents[i][j] == "_":
-                        row.append(True)
+                        row.append(True) # blank cell to fill
                     else:
-                        row.append(False)
+                        row.append(False) # blank cell to NOT fill
                 self.structure.append(row)
 
         # Save vocabulary list
