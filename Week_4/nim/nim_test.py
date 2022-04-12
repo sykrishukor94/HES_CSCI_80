@@ -145,6 +145,9 @@ def main():
     ai = train(10000)
     list = sorted(ai.q.items(), key= lambda k : k[1], reverse=True)
     print(list)
+    print(len(list))
+    for i in range(5):
+        play(ai)
 
 if __name__ == "__main__":
     main()

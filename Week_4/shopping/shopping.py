@@ -1,7 +1,6 @@
 import csv
 import sys
 import pandas as pd
-import sklearn.metrics
 
 from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import train_test_split
@@ -34,6 +33,7 @@ def main():
     print(f"Incorrect: {(y_test != predictions).sum()}")
     print(f"True Positive Rate: {100 * sensitivity:.2f}%")
     print(f"True Negative Rate: {100 * specificity:.2f}%")
+
 
 def load_data(filename):
     """
@@ -68,22 +68,23 @@ def load_data(filename):
     # Transforming column values
     d_mon = {
         'Jan': 0, 'Feb': 1, 'Mar': 2, 'Apr': 3, 'May': 4, 'June': 5,
-        'Jul': 6, 'Aug': 7, 'Sep': 8, 'Oct': 9, 'Nov': 10, 'Dec':11
+        'Jul': 6, 'Aug': 7, 'Sep': 8, 'Oct': 9, 'Nov': 10, 'Dec': 11
     }
     df.Month = df.Month.map(d_mon)
-    df.VisitorType = df.VisitorType.apply(lambda  x: 1 if (x == "Returning_Visitor") else 0)
-    df.Weekend = df.Weekend.apply(lambda x: 1 if (x == True) else 0)
-    df.Revenue = df.Revenue.apply(lambda x: 1 if (x == True) else 0)
+    df.VisitorType = df.VisitorType.apply(lambda x: 1 if (x == "Returning_Visitor") else 0)
+    df.Weekend = df.Weekend.apply(lambda x: 1 if (x is True) else 0)
+    df.Revenue = df.Revenue.apply(lambda x: 1 if (x is True) else 0)
 
     # print(df.info())
     # get labels as list
     labels = df["Revenue"].tolist()
 
     # get list of lists as evidence
-    df["evidence"] = df.iloc[:,:17].values.tolist()
+    df["evidence"] = df.iloc[:, :17].values.tolist()
     evidence = df["evidence"].tolist()
 
     return (evidence, labels)
+
 
 def train_model(evidence, labels):
     """
@@ -92,6 +93,7 @@ def train_model(evidence, labels):
     """
     model = KNeighborsClassifier(n_neighbors=1)
     return model.fit(evidence, labels)
+
 
 def evaluate(labels, predictions):
     """
@@ -116,6 +118,7 @@ def evaluate(labels, predictions):
     specificity = tn / (tn + fp)
 
     return (sensitivity, specificity)
+
 
 if __name__ == "__main__":
     main()

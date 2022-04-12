@@ -202,7 +202,6 @@ class NimAI():
             # get random choice in case epsilon is true
             rand_choice = random.choice(available_actions)
 
-
             if epsilon:
                 # if epsilon true, choose randomly with 10% chance or best choice with 90% choice
                 epsilon_choices = random.choices([rand_choice, best_choice], weights=(self.epsilon, 1 - self.epsilon))
