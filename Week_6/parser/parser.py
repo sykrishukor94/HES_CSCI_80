@@ -13,14 +13,21 @@ P -> "at" | "before" | "in" | "of" | "on" | "to"
 V -> "arrived" | "came" | "chuckled" | "had" | "lit" | "said" | "sat"
 V -> "smiled" | "tell" | "were"
 """
-
+# from lecture
+# | Adv V NP | V Det NP | V Conj VP  NP
+# | NP VP Conj NP VP
+# AdjN -> Adj | Adj AdjN
+# AdvV -> Adv | Adv AdvV
+# DetN -> Det | Det AdjP
 NONTERMINALS = """
-S -> NP VP
+S -> NP VP | S Conj S | S Conj VP NP
 
-Adj P ->
-NP ->
-PP ->
-VP ->
+AdjP -> Adj | Adj AdjP
+AdvV -> Adv | Adv AdvV | VAdv Adv | VAdv
+PP -> P NP
+NP -> N | Det NP | AdjP NP | N PP | N VP | NAdv
+VP -> V | AdvV | V NP | VP PP | V NP PP | V NP VP | V DetN | Conj V
+
 """
 
 grammar = nltk.CFG.fromstring(NONTERMINALS + TERMINALS)
@@ -29,35 +36,66 @@ parser = nltk.ChartParser(grammar)
 
 def main():
 
-    # If filename specified, read sentence from file
-    if len(sys.argv) == 2:
-        with open(sys.argv[1]) as f:
-            s = f.read()
+    # # If filename specified, read sentence from file
+    # if len(sys.argv) == 2:
+    #     with open(sys.argv[1]) as f:
+    #         s = f.read()
+    #
+    # # Otherwise, get sentence as input
+    # else:
+    #     s = input("Sentence: ")
+    #
+    # # Convert input into list of words
+    # s = preprocess(s)
+    #
+    # # Attempt to parse sentence
+    # try:
+    #     print(grammar.productions())
+    #     trees = list(parser.parse(s))
+    # except ValueError as e:
+    #     print(e)
+    #     return
+    # if not trees:
+    #     print("Could not parse sentence.")
+    #     return
+    #
+    # # Print each tree with noun phrase chunks
+    # for tree in trees:
+    #     tree.pretty_print()
+    #
+    #     print("Noun Phrase Chunks")
+    #     for np in np_chunk(tree):
+    #         print(" ".join(np.flatten()))
 
-    # Otherwise, get sentence as input
-    else:
-        s = input("Sentence: ")
+    #-----------------------------
+    print(grammar.productions())
+    sentences = open("C:/Users/sykri/PycharmProjects/CSCI_80/Week_6/parser/sentences.txt", 'r')
+    print(sentences)
+    for i, s in enumerate(sentences.readlines()):
+        # Convert input into list of words
+        print(f"Sentence {i+1}")
+        s = preprocess(s)
 
-    # Convert input into list of words
-    s = preprocess(s)
+        # Attempt to parse sentence
+        try:
+            trees = list(parser.parse(s))
+        except ValueError as e:
+            print(e)
+            return
+        if not trees:
+            print(f"Could not parse sentence {i+1}.")
+            return
 
-    # Attempt to parse sentence
-    try:
-        trees = list(parser.parse(s))
-    except ValueError as e:
-        print(e)
-        return
-    if not trees:
-        print("Could not parse sentence.")
-        return
+        # Print each tree with noun phrase chunks
+        for tree in trees:
+            tree.pretty_print()
+        #
+        #     print("Noun Phrase Chunks")
+        #     for np in np_chunk(tree):
+        #         print(" ".join(np.flatten()))
 
-    # Print each tree with noun phrase chunks
-    for tree in trees:
-        tree.pretty_print()
+    #-----------------------------
 
-        print("Noun Phrase Chunks")
-        for np in np_chunk(tree):
-            print(" ".join(np.flatten()))
 
 
 def preprocess(sentence):
@@ -67,13 +105,19 @@ def preprocess(sentence):
     and removing any word that does not contain at least one alphabetic
     character.
     """
+    sentence = sentence.strip()
     sentence = sentence.lower()
-    list = list()
-    for word in sentence.split("\\s+"):
-        if word.isalnum():
-            list.append(word.strip())
+    sentence = remove_punc(sentence)
 
-    return list
+    words = list()
+    print("input: ", sentence.split(" "))
+    for word in sentence.split(" "):
+        word = word.strip()
+        if word.isalnum():
+            words.append(word)
+    print("output: ", words)
+
+    return words
 
 def np_chunk(tree):
     """
@@ -83,6 +127,18 @@ def np_chunk(tree):
     noun phrases as subtrees.
     """
     raise NotImplementedError
+
+def remove_punc(sentence):
+    # initializing punctuations string
+    punc = '''!()-[]{};:'"\,<>./?@#$%^&*_~'''
+
+    # Removing punctuations in string
+    # Using loop + punctuation string
+    for c in sentence:
+        if c in punc:
+            sentence = sentence.replace(c, "")
+
+    return sentence
 
 
 if __name__ == "__main__":
